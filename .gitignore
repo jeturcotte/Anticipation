@@ -11,6 +11,9 @@
 # Example code in package build process
 *-Ex.R
 
+# Large data files
+data/in/
+
 # Output files from R CMD build
 /*.tar.gz
 
