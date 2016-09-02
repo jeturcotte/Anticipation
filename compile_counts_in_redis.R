@@ -5,7 +5,7 @@ redisSetPipeline(TRUE)
 corpus_file <- 'data/out/clean_corpus.txt'
 tc <- 0
 lc <- 0
-tl <- 50000 # length( readLines( corpus_file ) )
+tl <- 2000000 # length( readLines( corpus_file ) )
 
 # for display purposes
 specify_decimal <- function(x, k) format(round(x, k), nsmall=k)
@@ -47,16 +47,15 @@ for ( line in readLines( corpus_file, n=tl ) ) {
           
           # now keep us in the loop, yo
           if ( report ) {
-               print( 
-                    paste( as.integer( ( tc / 1000 ) ), 
+               print( paste( 
+                    as.integer( ( tc / 1000 ) ), 
                     "k n-gram tallies complete; ",
                     percent_done,
                     "% done at ",
                     lc,
-                    " lines processed out of ",
-                    tl,
-                    sep="" )
-               )
+                    " lines processed",
+                    sep=""
+               ) )
           }
      }
 }
