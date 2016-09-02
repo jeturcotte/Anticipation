@@ -13,6 +13,7 @@
 
 # Large data files
 data/in/
+data/out/
 
 # Output files from R CMD build
 /*.tar.gz
