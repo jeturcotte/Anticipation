@@ -1,6 +1,6 @@
 data_source <- 'data/out/clean_corpus.txt'
 bigram_result <- 'data/evaluated/sample_bigrams.csv'
-trigram_result <- 'data/evaluated/sample_bigrams.csv'
+trigram_result <- 'data/evaluated/sample_trigrams.csv'
 corpus_stats_result <- 'data/evaluated/bigram_and_trigram_stats.csv'
 corpus <- readLines( data_source )
 
