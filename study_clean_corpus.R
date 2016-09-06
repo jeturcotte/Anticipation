@@ -8,7 +8,7 @@ corpus <- readLines( data_source )
 specify_decimal <- function(x, k) format(round(x, k), nsmall=k)
 
 # take just a subset of the lines, across all sources
-corpus <- sample( corpus, 100000 )
+corpus <- sample( corpus, 250000 )
 
 # make space to record some things
 bigrams <- character()
@@ -40,7 +40,7 @@ for ( line in corpus ) {
           # and, finally, a trigram, if available
           if (n > 3) {
                trigram <- paste( words[(n-2):n], collapse=" " )
-               trigrams <- c( trigrams, trigram)
+               trigrams <- c( trigrams, trigram )
                tc <- tc + 1
                if (!tc %% 10000) { report <- TRUE }
           }
@@ -69,12 +69,13 @@ rownames(bigram_counts) <- unique_bigrams
 wc <- 0
 tc <- length(unique_bigrams)
 
-for ( bigram in unique_bigrams ) {
+for ( bigram in bigrams ) {
      wc <- wc + 1
      if ( is.na( bigram_counts[bigram,] ) ) {
           bigram_counts[bigram,] <- 1
      } else {
           bigram_counts[bigram,] <- bigram_counts[bigram,] + 1
+          #print( paste( 'bigram "', bigram, '" has been encountered more than once', sep="") )
      }
      if ( !wc %% 10000 ) {
           print( paste( 
@@ -92,7 +93,8 @@ for ( bigram in unique_bigrams ) {
 
 # now reformat for saving
 bigram_counts <- as.data.frame( bigram_counts )
-bigram_counts$word <- rownames( bigram_counts )
+bigram_counts$bigram <- rownames( bigram_counts )
+colnames(bigram_counts) <- c('count','bigram')
 write.csv(bigram_counts, bigram_result, row.names=F )
 
 # and finally for trigrams
@@ -102,9 +104,9 @@ rownames(trigram_counts) <- unique_trigrams
 
 # count the trigrams, ad nauseam
 wc <- 0
-tc <- length(unique_trigrams)
+tc <- length(trigrams)
 
-for ( trigram in unique_trigrams ) {
+for ( trigram in trigrams ) {
      wc <- wc + 1
      if ( is.na( trigram_counts[trigram,] ) ) {
           trigram_counts[trigram,] <- 1
@@ -127,7 +129,8 @@ for ( trigram in unique_trigrams ) {
 
 # now reformat for saving
 trigram_counts <- as.data.frame( trigram_counts )
-trigram_counts$word <- rownames( trigram_counts )
+trigram_counts$trigram <- rownames( trigram_counts )
+colnames(trigram_counts) <- c('count','trigram')
 write.csv( trigram_counts, trigram_result, row.names=F )
 
 # and lets just spit out some stats, too

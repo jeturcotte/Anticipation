@@ -1,10 +1,9 @@
 ---
-title: "N-Gram Based Predictive Text Modelling - Milestone Report"
+title: "A Quick Corpus Study - Milestone Report"
 author: "J.E. Turcotte"
 date: "September 4, 2016"
 output: html_document
 ---
-
 
 ```{r loading and labelling the data, message=F, warning=F, echo=F }
 library(ggplot2)
@@ -14,6 +13,7 @@ library(knitr)
 library(pander)
 library(car)
 library(caret)
+library(reshape2)
 
 set.seed(7041)
 
@@ -32,138 +32,115 @@ grid_arrange_shared_legend <- function(...) {
 }
 ```
 ```{r get the data, echo=F, warning=F}
-data_source <- 'data/out/clean_corpus.txt'
-data_result <- 'data/evaluated/sample_ngrams.csv'
-corpus <- readLines( data_source, n=10000 )
-trn <- read.csv("data/pml-training.csv", na.strings=c("","#DIV/0!","NA"), stringsAsFactors=F )
-trn$classe <- as.factor(trn$classe)
+
+bigrams <- read.csv(
+     "data/evaluated/sample_bigrams.csv",
+     stringsAsFactors = FALSE
+)
+
+trigrams <- read.csv(
+     "data/evaluated/sample_trigrams.csv",
+     stringsAsFactors = FALSE
+)
+
+blogs_words <- read.csv(
+     "data/evaluated/blogs_words.csv",
+     stringsAsFactors = FALSE
+)
+
+news_words <- read.csv(
+     "data/evaluated/news_words.csv",
+     stringsAsFactors = FALSE
+)
+
+twitter_words <- read.csv(
+     "data/evaluated/twitter_words.csv",
+     stringsAsFactors = FALSE
+)
+
+blogs_stats <- read.csv(
+     "data/evaluated/blogs_stats.csv",
+     stringsAsFactors = FALSE
+)
+
+news_stats <- read.csv(
+     "data/evaluated/news_stats.csv",
+     stringsAsFactors = FALSE
+)
+
+twitter_stats <- read.csv(
+     "data/evaluated/twitter_stats.csv",
+     stringsAsFactors = FALSE
+)
+
+ngram_stats <- read.csv(
+     "data/evaluated/bigram_and_trigram_stats.csv",
+     stringsAsFactors = FALSE
+)
+
 ```
 
-## Executive Summary
+Herein is a simplie report of progress being made toward and end goal of developing a predictive model useful in guessing a typer's next most probable word, based on a large corpus of blog posts, news articles, and tweets.  At this early stage, a truly niave method is utilized in analyzing the contents of these files.
 
-Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).  In this brief study, we try a few different classification regressions to arrive at a very high accuracy prediction model capable of assessing future data sets for this particularly kind of exercise.
+## Processing
 
-## Assumptions
+Each file was re-processed, cutting each provided line into any number of sentences, to be studied as cohesive thoughts.  The results were then cleaned of any further punctuation, capital letters and the like, and cached as such for later tallies.  These then were studied for word counts versus unique word counts (effectively unigrams) as well as bi- and tri-gram groupings, again for total population and counts for the unique among them.  From news and blog entries, we pulled 50,000 records and random, and (given the brevity of tweets at 140 charcters, maximum) 250,000 from twitter.  The results were, again, cached to .csv file for ease of consideration at the time of this report.
 
-This predictive model assumes that...
+## Basic Details about Each Corpus
 
-* We do not need to know the individual who is doing the exercise, insofar as doing an exercise correctly or incorrectly in a number of predictable ways is common to all people.
-* It might be of interest to treat each variable as a time sequence, given the timestamps available, but that we should still be able to predict future movement classes without this.
-
-## Data Examination and Repair
-
-```{r normalizing test data, echo=F, warning=F }
-
-# find any columns that have essentially zero variation
-cull <- nearZeroVar( trn, saveMetrics=T )
-cull.alpha <- rownames( cull[cull$zeroVar==T,] )
-
-# create a means for measuring ratio of any given variable's na vs. useful values
-na.ratio <- function(vn) { sum( is.na(vn) / length(vn) ) }
-cull.beta <- names( which( sapply( trn, na.ratio ) > 0.9 ) )
-
-# further columns that we don't want to know about and could cloud our model
-cull.gamma <- c('X','user_name','raw_timestamp_part_1','raw_timestamp_part_2','cvtd_timestamp','num_window','new_window')
+```{r whittle down the words a bit, message=F, warning=F, echo=F }
+blogs_words <- blogs_words[blogs_words$word != '',]
+blogs_words <- blogs_words[blogs_words$V1 > 1,]
+news_words <- news_words[news_words$word != '',]
+news_words <- news_words[news_words$V1 > 1,]
+twitter_words <- twitter_words[twitter_words$word != '',]
+twitter_words <- twitter_words[twitter_words$V1 > 1,]
 ```
-
-Given the large number of variables available, a quick look through **Fig.1** -- *a table of variation and uniqueness within the training data set* -- suggests that we can afford to cull quite a few.  In **Fig.2** we see all that remain after selecting out the union of *`r length(cull.alpha)`* zero variation variables, *`r length(cull.beta)`* variables that are more than 90 'na', and *`r length(cull.gamma)`*, like *user_name* against which we specifically do NOT want to predict, or are otherwise not important and might confuse our results if left intact.
-
-Interestingly enough, the union of the first and second group, with *`r length( unique( c( cull.alpha, cull.beta ) ) )`* variables, says that all the no-variation data fit snugly within the larger group of variables that were ruled almost entire by NA values.  Less the unnecessary columns, that leaves *`r length( colnames( trn ) )`* variates to fit.
-
-## Partitioning of Training and Test Data
-
-```{r apply alterations to new data frames and make subselections, eval=T, echo=F, warning=F }
-trn <- trn[, !names(trn) %in% unique( c( cull.alpha, cull.beta, cull.gamma ) ) ]
-subselection <- createDataPartition( trn$classe, p=0.9 )
-# note that, as of R 3.3.0, it appears that $Resample1 must be included
-training <- trn[subselection$Resample1,]
-testing <- trn[-subselection$Resample1,]
+```{r assembling some data, message=F, warning=F, echo=F }
+raw_stats <- rbind( blogs_stats, news_stats, twitter_stats )
+rownames(raw_stats) <- c('Blogs','News','Twitter')
+raw_stats$most_common <- c('','','')
+raw_stats['Blogs',]$most_common <- paste( head( blogs_words[order( blogs_words$V1, decreasing=T ),], n=4 )$word, collapse=", " )
+raw_stats['News',]$most_common <- paste( head( news_words[order( news_words$V1, decreasing=T ),], n=4 )$word, collapse=", " )
+raw_stats['Twitter',]$most_common <- paste( head( twitter_words[order( twitter_words$V1, decreasing=T ),], n=4 )$word, collapse=", " )
+colnames(raw_stats) <- c('Studied Entries','Total Words','Unique Words','Most Common')
+pander(raw_stats)
 ```
+As must be no surprise, basic words such as 'the', 'and', and 'to' dominate the word counts.  They do vary in order, however, suggesting different styles of writing technique, as further exemplified by the the use of 'i' in the twitter feed.  Given that blogs might be akin to a halfway point between tweets (which usually are self-referential) and news (which significantly more complex architecture), let's pick and compare some words common to each from this collection... albeit, a few common but not extremely common words, and a few uncommon as well.
 
-For the purposes of this predictive model production, we will be splitting our initial training data two ways. *`r length(training$classe)`* remain in the training set while *`r length(testing$classe)`* will become our final in-study test.
+# Some Findings about Word Use
+```{r use blogs to compare to news and tweets, message=F, warning=F, echo=F, fig.width=10, fig.height=3 }
 
-## Examining Possible Models
+# take a subset of the blog corpus, winnowing things down to common but not extremely
+# common words AND some uncommon but not rare ones
+subset_of_blogs <- blogs_words[ blogs_words$V1 <= 10000 & blogs_words$V1 >= 1200, ]
+subset_of_blogs <- subset_of_blogs[ order( subset_of_blogs$V1, decreasing=T ), ]
+chosen_words <- data.frame( word=character(), group=character(), count=integer() )
+chosen <- c( head( subset_of_blogs$word, n=10 ), tail( subset_of_blogs$word, n=10 ) )
 
-```{r set up common kfold controls, eval=T, echo=F, warning=F }
-controls <- trainControl( method="cv", number=5 )
+# now get those counts into a new data structure
+comparing_the_chosen <- blogs_words[blogs_words$word %in% chosen,c(2,1)]
+comparing_the_chosen[,3] <- news_words[news_words$word %in% chosen,1]
+comparing_the_chosen[,4] <- twitter_words[twitter_words$word %in% chosen,1]
+comparing_the_chosen <- comparing_the_chosen[ order(comparing_the_chosen$V1, decreasing=T ), ]
+
+# now turn them into ratios, since our word count from each do not match
+colnames(comparing_the_chosen) <- c('Word','Blogs','News','Twitter')
+comparing_the_chosen$Blogs <- ( comparing_the_chosen$Blogs / sum(blogs_words$V1) ) * 100
+comparing_the_chosen$News <- ( comparing_the_chosen$News / sum(news_words$V1) ) * 100
+comparing_the_chosen$Twitter <- ( comparing_the_chosen$Twitter / sum(twitter_words$V1) ) * 100
+
+# and now make this displayable
+comparing_the_chosen <- melt( comparing_the_chosen )
+colnames(comparing_the_chosen) <- c('Word','Source','Percent')
+wp <- ggplot( comparing_the_chosen, aes( reorder(Word,-Percent), Percent, fill=Source) )
+wp <- wp + geom_bar( stat="identity", position='dodge' ) #aes(fill=Source)
+wp + xlab("10 Common and 10 Uncommon Words") + ylab("Percent of All Words Used")
 ```
-```{r try a simple k-fold rpart, cache=T, echo=F, warning=F }
-cv_rpart_model <- train( classe ~ ., training, method="rpart", trControl=controls )
-confused_cv_rpart <- confusionMatrix( testing$classe, predict( cv_rpart_model, newdata=testing ) )
-plot_cv_rpart <- ggplot( as.data.frame( as.table( confused_cv_rpart$table ) ) )
-plot_cv_rpart <- plot_cv_rpart + geom_tile( aes( x=Reference, y=Prediction, fill=Freq) )
-plot_cv_rpart <- plot_cv_rpart + scale_fill_distiller( palette="Spectral" )
-plot_cv_rpart <- plot_cv_rpart + geom_text( aes(x=Reference, y=Prediction, label=Freq ) )
-```
-```{r and now a fully fitted random forest, cache=T, echo=F, warning=F }
-rf_model <- train( classe ~ ., training, method="rf", trControl=controls )
-confused_rf <- confusionMatrix( testing$classe, predict( rf_model, newdata=testing ) )
-plot_rf <- ggplot( as.data.frame( as.table( confused_rf$table ) ) )
-plot_rf <- plot_rf + geom_tile( aes( x=Reference, y=Prediction, fill=Freq) )
-plot_rf <- plot_rf + scale_fill_distiller( palette="Spectral" )
-plot_rf <- plot_rf + geom_text( aes(x=Reference, y=Prediction, label=Freq ) )
-```
-```{r whittle it down a bit, eval=T, echo=F, warning=F }
-imp <- varImp(cv_rpart_model)$importance
-imp$predictor <- row.names(imp)
-new_predictors <- imp[imp$Overall > 33,]$predictor
-```
-```{r one last random forest refuge, eval=T, echo=F, cache=T, warning=F }
-simpler_formula <- as.formula(paste("classe ~ . -", paste(new_predictors,collapse=" - ")))
-simpler_model <- train( simpler_formula, training, method="rf", trControl=controls )
-simply_confused <- confusionMatrix( testing$classe, predict( simpler_model, newdata=testing ) )
-plot_simpler <- ggplot( as.data.frame( as.table( simply_confused$table ) ) )
-plot_simpler <- plot_simpler + geom_tile( aes( x=Reference, y=Prediction, fill=Freq) )
-plot_simpler <- plot_simpler + scale_fill_distiller( palette="Spectral" )
-plot_simpler <- plot_simpler + geom_text( aes(x=Reference, y=Prediction, label=Freq ) )
-```
-```{r combine the plots, eval=T, echo=F, warning=F, fig.align='right', fig.width=2, fig.height=6}
-grid_arrange_shared_legend( plot_cv_rpart, plot_rf, plot_simpler )
-```
-Note that, in both of the following cases, we've already effectively disqualified a large number of potential predictors, so we begin (and find that we can end) with the most basic of model formalae.
+Between blogs and news, shorter and more commonly used words are used in relatively similar proportion throughout the sample sets, though some seem to be more often sacrificed for brevity (presumably) within tweets.  Not too surprisingly, blogs seem to mention 'me' vastly more often than the other two combined.  Further, less common words appear to be more commonly used on twitter than elsewhere... again, perhaps there's not enough room for the most common in a tweet.
 
-First up, we give a simpler model, an *rpart*, a try, just to see how effective it might be.  With a 5 segment k-fold cross validation applied across all variables (***classe ~ .***), we ultimately get a poor result at a mere `r sprintf("%0.2f",confused_cv_rpart$overall[1]*100)`% accuracy rate when applied to our testing set (*top plot*.)  It appears that we are able to fairly easily identify *class A*, aka 'correct', exercise movements, but the rest are all over the place.  In fact, very few *class E* events were predicted, and none among *class E*.
+## Further Work
 
-In the lower plot, the confusion matrix for a **random forest** model, (again, ***classe ~ .***), also enduring a 5 segment k-fold cross validation process before being applied to the isolated test segment.  As can be seen in the plot, this method proved extremely accurate, given that if we'd significantly overfit our model, the rate should be a great deal lower than the `r sprintf("%0.2f",confused_rf$overall[1]*100)`% we got.
+Going forward, in trying to develop a predictive model, thus, it may be important to either cull the connective words like these, as a twitter user naturally seems to be doing.
 
-## Concluding with a Simpler Model
-
-Given the aforementioned `r sprintf("%0.2f",confused_rf$overall[1]*100)`% accuracy rate earned against the test data, there's room now to explore how many of the predictors are actually useful.  This, we see in **Fig.3**, in the appendix.  It turns out that *`r sum(imp$importance > 0)`* of the predictors, as a result of the **caret** package random forest algorithms, are considered useful... something we trust, given the model's accuracy against the test data.
-
-As you can see in the bototm of the right-hand plots, the net result, clocks in with a barely touched accuracy of ***`r sprintf("%0.2f",simply_confused$overall[1]*100)`%***, and the following *`r length(new_predictors)`* predictors were enough to provide a very very accuracte prediction model:
-
-```{r display predictors, eval=T, echo=F, warning=F }
-pander(new_predictors)
-```
-
-## Source
-
-Ugulino, W.; Cardador, D.; Vega, K.; Velloso, E.; Milidiu, R.; Fuks, H. Wearable Computing: Accelerometers' Data Classification of Body Postures and Movements. Proceedings of 21st Brazilian Symposium on Artificial Intelligence. Advances in Artificial Intelligence - SBIA 2012. In: Lecture Notes in Computer Science. , pp. 52-61. Curitiba, PR: Springer Berlin / Heidelberg, 2012. ISBN 978-3-642-34458-9. DOI: 10.1007/978-3-642-34459-6_6. 
-Cited by 2 (Google Scholar)
-
-Read more: http://groupware.les.inf.puc-rio.br/har#ixzz4Bz9LVKWs
-
-## Appendices
-
-#### Fig.1; Near Zero Variation
-
-A quick look at the nature of the various columns we must examine.  Quite a few either have zero or near zero variation, rendering them expendible for the purposes of this data exploration.
-
-```{r near zero variation detection, echo=F, eval=T, warning=F }
-pander(nearZeroVar(trn,saveMetrics=T))
-```
-
-#### Fig.2; After Culling Needless Variables
-
-After studying the nature of the variables a few times, this study has whittled down those that will be considered for the prediction model down to the following.
-
-```{r display high amounts of na, echo=F, eval=T, warning=F}
-pander( summary( trn[, !names(trn) %in% unique( c( cull.alpha, cull.beta, cull.gamma ) ) ] ) )
-```
-
-#### Fig.3; The Most Important Variables
-
-A quick look at at the predictors used in the very successful *random forest* model, below.
-```{r display the most important variables, echo=F, eval=T}
-pander( varImp(cv_rpart_model) )
-```
+Efforts to collate bi-grams and tri-grams are ongoing, but proving very time consuming, and practices for making this more efficient will almost certainly be required in the next week, for the next report.
