@@ -128,8 +128,8 @@ for ( trigram in trigrams ) {
 }
 
 # now reformat for saving
-trigram_counts <- as.data.frame( trigram_counts )
 trigram_counts$trigram <- rownames( trigram_counts )
+trigram_counts <- as.data.frame( trigram_counts )
 colnames(trigram_counts) <- c('count','trigram')
 write.csv( trigram_counts, trigram_result, row.names=F )
 
