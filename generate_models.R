@@ -3,7 +3,7 @@
 #trigrams <- ngrams(tokens,n=3,concatenator=" ")
 #tg_matrix <- dfm(trigrams, verbose = F)  # this makes an incident matrix!
 
-#setwd("~/R/PROJECTS/Anticipation")
+setwd("~/R/PROJECTS/Anticipation")
 library(quanteda)
 library(markovchain)
 ptm <- proc.time()
