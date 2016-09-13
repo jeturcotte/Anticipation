@@ -1,97 +1,74 @@
 setwd("~/R/PROJECTS/Anticipation")
 
-data_source <- 'data/in'
-data_result <- 'data/out'
-blogs <- readLines( paste( data_source, 'en_US.blogs.txt', sep='/' ) )
-news <- readLines( paste( data_source, 'en_US.news.txt', sep='/' ) )
-twitter <- readLines( paste( data_source, 'en_US.twitter.txt', sep='/' ) )
-out_blogs <- paste( data_result, 'clean_blogs.txt', sep="/" )
-out_news <- paste( data_result, 'clean_news.txt', sep="/" )
-out_twitter <- paste( data_result, 'clean_twitter.txt', sep="/" )
-
-count <- 0
-
-# first attempt; the most manual way possible... just clean the corpus up
-for ( line in blogs ) {
-     
-     thoughts <- strsplit( tolower(line), '\\.\\s*|\\?\\s*|\\!\\s*', perl=T )
-     for ( thought in unlist(thoughts) ) {
-          words <- unlist( 
-               strsplit( 
-                    gsub( pattern="[[:punct:]]", thought, replacement="" ),
-                    " "
-               )
+separate_sentences <- function( corpus ) {
+     message('breaking corpus down into individual sentence')
+     return(
+          unlist(
+               strsplit( corpus, '(?<![^!?.])\\s+', perl=T )
           )
-          words <- words[words != '']
-          if (length(words) > 1) {
-               if (count == 0) {
-                    write( paste( words, collapse=" " ), out_blogs, append=FALSE )
-               } else {
-                    write( paste( words, collapse=" " ), out_blogs, append=TRUE )
-               }
-               count <- count + 1
-          }
-
-          if (!count %% 10000) {
-               print( paste( count, "items have been written to blog file" ) )
-          }
-     }
-}
-print("done")
-
-count <- 0
-
-for ( line in news ) {
-     
-     thoughts <- strsplit( tolower(line), '\\.\\s*|\\?\\s*|\\!\\s*', perl=T )
-     for ( thought in unlist(thoughts) ) {
-          words <- unlist( 
-               strsplit( 
-                    gsub( pattern="[[:punct:]]", thought, replacement="" ),
-                    " "
-               )
-          )
-          words <- words[words != '']
-          if (length(words) > 1) {
-               if (count == 0) {
-                    write( paste( words, collapse=" " ), out_news, append=FALSE )
-               } else {
-                    write( paste( words, collapse=" " ), out_news, append=TRUE )
-               }
-               count <- count + 1
-          }
-          
-          if (!count %% 10000) {
-               print( paste( count, "items have been written to news file" ) )
-          }
-     }
+     )
 }
 
-count <- 0
+change_whitespace_to_space <- function( corpus ) {
+     message('simplifying white space usage')
+     return(
+          gsub( "[[:space:]]", " ", corpus )
+     )
+}
 
-for ( line in twitter ) {
-     
-     thoughts <- strsplit( tolower(line), '\\.\\s*|\\?\\s*|\\!\\s*', perl=T )
-     for ( thought in unlist(thoughts) ) {
-          words <- unlist( 
-               strsplit( 
-                    gsub( pattern="[[:punct:]]", thought, replacement="" ),
-                    " "
+expand_common_full_stops <- function( corpus ) {
+     message('expanding common full stops')
+     corpus <- gsub( "mr.", "mister", corpus, ignore.case=TRUE )
+     corpus <- gsub( "mrs.", "missus", corpus, ignore.case=TRUE )
+     corpus <- gsub( "dr.", "doctor", corpus, ignore.case=TRUE )
+     corpus <- gsub( "prof.", "professor", corpus, ignore.case=TRUE )
+     corpus <- gsub( "capt.", "captain", corpus, ignore.case=TRUE )
+} 
+
+clean_sentences <- function( corpus ) {
+     message('cleaning corpus of rare complexities, incuding content in parentheses')
+     corpus <- gsub( " *\\(.*?\\) *", "", corpus)
+     corpus <- gsub( " *\\[.*?\\] *", "", corpus)
+     # what about ... elipses?
+     return(
+          gsub( "[^[:alnum:], '?!.-;:]", "", corpus)
+     )
+}
+
+process_corpus <- function( type, src='data/in' ) {
+     filename <- sprintf( '%s/en_US.%s.txt', src, type )
+     message( sprintf( 'processing file: %s', filename ) )
+     corpus <- readLines( filename )
+     corplen <- length( corpus )
+     corpus <- expand_common_full_stops (
+          change_whitespace_to_space (
+               clean_sentences(
+                    corpus
                )
           )
-          words <- words[words != '']
-          if (length(words) > 1) {
-               if (count == 0) {
-                    write( paste( words, collapse=" " ), out_twitter, append=FALSE )
-               } else {
-                    write( paste( words, collapse=" " ), out_twitter, append=TRUE )
-               }
-               count <- count + 1
+     )
+     corpus <- separate_sentences( corpus )
+     message( sprintf( 'broken %d lines in original corpus to %d simplified new lines', corplen, length(corpus) ) )
+     return( corpus )
+}
+
+parse_corpus_to_chunked_files <- function( type, chunksize=100000, dest='data/out' ) {
+     corpus <- process_corpus( type )
+     corplen <- length( corpus )
+     corpus <- split( corpus, ceiling( seq_along( corpus ) / chunksize ) )
+     for( clabel in labels( corpus ) )  {
+          chunk <- corpus[[clabel]]
+          if ( length(chunk) < chunksize ) {
+               filename <- sprintf( '%s/%s.%s.txt', dest, type, 'testing' )
+          } else {
+               filename <- sprintf( '%s/%s.%s_%s.txt', dest, type, 'training', clabel )
           }
-          
-          if (!count %% 10000) {
-               print( paste( count, "items have been written to twitter file" ) )
-          }
+          writeLines( chunk, filename )
+          message( sprintf( 'saved %s to disk for later stages of processing', filename ) )
      }
 }
 
+for( type in c( 'blogs', 'news', 'twitter' ) ) {
+     message( sprintf( 'importing %s-type corpus', type ) )
+     parse_corpus_to_chunked_files( type )
+}
