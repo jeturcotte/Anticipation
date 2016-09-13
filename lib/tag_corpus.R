@@ -27,8 +27,8 @@ for( filename in list.files( src ) ) {
      )
      
      message( sprintf( 'saving file: %s', outfile ) )
-     saveRDS( text.tagged, 'data/evaluated/tagged_blogs.rds' )
-     message( proc.time() - ptm )
+     saveRDS( text.tagged, outfile )
+     print( proc.time() - ptm )
      
 }
 
