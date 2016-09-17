@@ -8,8 +8,6 @@ setwd("~/R/PROJECTS/Anticipation")
 src <- 'data/raw_texts'
 dest <- 'data/close'
 
-full_corpus <- character()
-
 for( filename in list.files( src ) ) {
      
      if ( grepl('testing', filename) ) {

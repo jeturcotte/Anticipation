@@ -16,6 +16,7 @@
 data/in/
 data/out/
 data/raw_texts/
+data/raw_ngrams/
 data/evaluated/
 
 # Output files from R CMD build

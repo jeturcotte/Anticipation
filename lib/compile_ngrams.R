@@ -3,11 +3,9 @@ library(stringr)
 library(dplyr)
 library(data.table)
 
-specify_decimal <- function(x, k) format(round(x, k), nsmall=k)
-
 setwd("~/R/PROJECTS/Anticipation")
 
-src <- 'data/raw_text'
+src <- 'data/raw_texts'
 dest <- 'data/raw_ngrams'
 
 for( filename in list.files( src ) ) {
@@ -42,9 +40,10 @@ for( filename in list.files( src ) ) {
                verbose = T
           )
      )
-     message( sprintf( 'data file %s, part %s tokenized', ctype, cnum ) )
-
-     # build out EVERY SINGLE 2-4gram in the entire sample corpus
+     corpus <- corpus[ !grepl( '[[:digit:]]', corpus ) ]
+     message( sprintf( 'data file %s has been tokenized', infile ) )
+     
+     # build out EVERY SINGLE 1-4gram in the entire sample corpus
      all_ngrams <- unlist(
           lapply(
                head( corpus, n=length(corpus) ),
@@ -53,29 +52,35 @@ for( filename in list.files( src ) ) {
                }
           )
      )
-     message( sprintf('%d ngrams assembled', length(all_ngrams) ) )
 
      # create a data frame to contain all this
-     ng_frame <- data.frame( ngram=unlist( all_ngrams ) )
-     message('initial data frame created')
+     all_ngrams <- data.table( ngram=unlist( all_ngrams ) )
+     message( 
+          sprintf(
+               'initial data table of %d ngrams created, consuming %f megs of memory',
+               nrow( all_ngrams ),
+               object.size( all_ngrams ) / (1024*1024)
+               )
+     )
 
-     # split out the columns
-     ng_frame <- as.data.frame(str_split_fixed( ng_frame$ngram, "\\|", 2))
-     message('predictors isolated from observations')
-     
      # now sum it all up
-     ng_frame <- tally( group_by( ng_frame, V1, V2 ), sort=T )
-     colnames(ng_frame) <- c('predictors','observed','frequency')
-     ng_frame <- group_by( ng_frame, predictors ) %>% mutate( percent = frequency / sum(frequency) )
-     message( sprintf( 'summations of %d unique ngrams tallied!', nrow(ng_frame) ) )
-
+     all_ngrams <- tally( group_by( all_ngrams, ngram ), sort=T )
+     colnames(all_ngrams) <- c('observed','frequency')
+     #all_ngrams <- all_ngrams[all_ngrams$frequency > 3,]
+     message( 
+          sprintf(
+               'compressed tallies of %d unique multi-sighting ngrams created, consuming %f megs of memory',
+               nrow( all_ngrams ),
+               object.size( all_ngrams ) / (1024*1024)
+          )
+     )
+     
      # and save it out before it disappears, for cthulhu's sake!
      outfile <- sprintf( '%s/%s.%s.rds', dest, ctype, cnum )
      saveRDS( all_ngrams, outfile )
      print(proc.time() - ptm)
      message( sprintf( 'saved to %s ... and done\n\n', outfile ) )
      
-     quit()
 }
 
 
