@@ -29,7 +29,7 @@ for( filename in list.files( src ) ) {
                removePunct = T,
                removeSeparators = T,
                removeTwitter = T,
-               verbose = T
+               verbose = F
           )
      )
      message( sprintf( 'data file %s has been tokenized', infile ) )

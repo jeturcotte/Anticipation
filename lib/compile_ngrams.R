@@ -28,20 +28,26 @@ for( filename in list.files( src ) ) {
      ptm <- proc.time()
      corpus <- readLines( infile )
      message( sprintf( 'data file %s loaded and resampled', infile ) )
+     
+     # remove some contractions
+     corpus <- gsub('\\\'', '', corpus)
 
      # tokenize the data
      corpus <- toLower(
-          tokenize(
-               corpus,
-               removeNumbers = T,
-               removePunct = T,
-               removeSeparators = T,
-               removeTwitter = T,
-               verbose = T
+          removeFeatures(
+               tokenize(
+                    corpus,
+                    removeNumbers = T,
+                    removePunct = T,
+                    removeSeparators = T,
+                    removeTwitter = T,
+                    verbose = T
+               ),
+               stopwords("english")
           )
      )
      corpus <- corpus[ !grepl( '[[:digit:]]', corpus ) ]
-     message( sprintf( 'data file %s has been tokenized', infile ) )
+     message( sprintf( 'data file %s has been tokenized and cleaned of number-letter combinations and stopwords', infile ) )
      
      # build out EVERY SINGLE 1-4gram in the entire sample corpus
      all_ngrams <- unlist(
