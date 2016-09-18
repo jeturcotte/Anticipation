@@ -24,46 +24,36 @@ for( type in c('blogs','news','twitter') ) {
                n_time <- proc.time()
                
                # load only the subcategory of ngrams this time around
-               files <- list.files( 
-                    sprintf( 
-                         '%s/%s',
-                         src,
-                         type
-                    )
-               )
+               files <- list.files( sprintf( src ) ) 
                fpat <- sprintf( '%s_%s', category, n )
-               files <- files[grepl( fpat, files)]
+               files <- files[ grepl( fpat, files) ]
+               if( !length(files) ) { next }
+               infile <- sprintf( '%s/%s', src, files[1] )
+               outfile <- sprintf( '%s/all.%s.%d.grams.rds', src, category, n )
                
                # read in first file manually given that we're aggregating now
-               ngrams <- readRDS(
-                    sprintf(
-                         '%s/%s/%s',
-                         src,
-                         type,
-                         files[1]
-                    )
-               )
+               message( sprintf( '\nopening < %s > to begin', infile ) )
+               ngrams <- readRDS( infile )
                
                for( filename in files[2:( length(files) )] ) {
                     
-                    file_time <- proc.time()
-                    
-                    infile <- sprintf( '%s/%s/%s', src, type, filename )
+                    infile <- sprintf( '%s/%s', src, filename )
                     total_in <- nrow(ngrams)
                     
                     # load the data
+                    message( sprintf( 'opening < %s > for merger', infile ) )
                     next_ngrams <- readRDS( infile )
                     total_loaded <- nrow(next_ngrams)
-                    message( sprintf( 'file < %s > loaded', infile ) )
-                    
+
                     # aggregate their tallies
                     ngrams <- aggregate( frequency ~ observed, data=rbind( ngrams, next_ngrams ), FUN=sum)
                     total_merged <- nrow(ngrams)
 
                     message( 
                          sprintf( 
-                              ' - had %d rows of %d-grams, loaded %d more, and merged to become %d\n - - (consuming %0.2f megs of memory)\n', 
+                              ' - had %d rows of %s %d-grams, plus %d more, and merged to become %d\n - - (consuming %0.2f megs of memory)', 
                               total_in,
+                              category,
                               n, 
                               total_loaded,
                               total_merged,
@@ -72,26 +62,33 @@ for( type in c('blogs','news','twitter') ) {
                     )
                     
                     # and save it out before it disappears, for cthulhu's sake!
-                    outfile <- sprintf( '%s/all_%d-grams.rds', src, n )
                     saveRDS( ngrams, outfile )
-                    message( sprintf( ' - backed up to < %s >\n', outfile ) )
+                    message( sprintf( ' - backed up to < %s >', outfile ) )
                     
                } # end individual file aggregation
 
                print( proc.time() - n_time )
-               message( sprintf( ' - final %d-grams saved to < %s > ... and done with %s\n\n', n, outfile, type ) )
+               message(
+                    sprintf(
+                         ' - final %s %d-grams saved to < %s > ... and done with %s\n',
+                         category,
+                         n,
+                         outfile,
+                         type
+                    )
+               )
                               
           } # end n-gram collation
 
      } # end categorical collation
 
      print(proc.time() - type_time)
-     message( sprintf( '- ngrams for %s have been collated', type ) )
+     message( sprintf( '- ngrams for %s have been collated\n\n', type ) )
      
 } # end type collation
 
 print(proc.time() - script_time)
-message( sprintf( 'all ngram types have been collated' ) )
+message( sprintf( 'all ngram types have been collated\n' ) )
 
 
 
