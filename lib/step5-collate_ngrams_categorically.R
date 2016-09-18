@@ -7,8 +7,6 @@ setwd("~/R/PROJECTS/Anticipation")
 
 script_time <- proc.time()
 
-common_vocabulary <- readRDS('dat/close/vocabulary.rds')
-
 # keep separate ngrams from different sources, for now
 for( type in c('blogs','news','twitter') ) {
      
@@ -86,10 +84,13 @@ for( type in c('blogs','news','twitter') ) {
           } # end n-gram collation
 
      } # end categorical collation
+
+     print(proc.time() - type_time)
+     message( sprintf( '- ngrams for %s have been collated', type ) )
      
 } # end type collation
 
-print(proc.time() - entire)
+print(proc.time() - script_time)
 message( sprintf( 'all ngram types have been collated' ) )
 
 
