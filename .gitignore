@@ -13,11 +13,8 @@
 *-Ex.R
 
 # Large data files
-data/in/
-data/out/
-data/raw_texts/
-data/raw_ngrams/
-data/evaluated/
+data/
+dat/
 
 # Output files from R CMD build
 /*.tar.gz
