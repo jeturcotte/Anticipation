@@ -15,50 +15,100 @@ setwd("~/R/PROJECTS/Anticipation")
 
 script_time <- proc.time()
 
-# load the data
-penta_news <- readRDS('dat/ngrams/news/all.intact.5.grams.rds')
-penta_blogs <- readRDS('dat/ngrams/blogs/all.intact.5.grams.rds')
-penta_tweets <- readRDS('dat/ngrams/twitter/all.intact.5.grams.rds')
-message('5gram files loaded')
+remove_stop_words <- function(obs) {
+     pared_down <- removeFeatures( tokenize(obs), stopwords("english") )
+     return( paste( unlist( pared_down ), collapse=" " ) )
+}
 
-# eliminate majority of useless entries
-penta_news <- penta_news[penta_news$frequency > 1,]
-penta_blogs <- penta_blogs[penta_blogs$frequency > 1,]
-penta_tweets <- penta_tweets[penta_tweets$frequency > 1,]
-message('5gram lists whittled down a bit')
+for( n in 5:2 ) {
+     
+     n_time <- proc.time()
+     message( sprintf( 'loading all source %d-gram files', n ) )
+     # for now, we're going to ignore previous nostopword and do it to predictos on the fly here
+          # efficient, right?
+     news <- readRDS( sprintf( 'dat/ngrams/news/all.intact.%d.grams.rds', n ) )
+     blogs <- readRDS( sprintf( 'dat/ngrams/blogs/all.intact.%d.grams.rds', n ) )
+     tweets <- readRDS( sprintf( 'dat/ngrams/twitter/all.intact.%d.grams.rds', n ) )
+     
+     # cut out ridiculously rare things
+     news <- news[news$frequency > 2,]
+     blogs <- blogs[blogs$frequency > 2,]
+     tweets <- tweets[tweets$frequency > 2,]
+     message( sprintf( ' - merging all but unique %d-grams', n ) )
+     
+     # add ,'nostopword' later... along with a section to do it
+     for( category in c( 'intact', 'no_stop_words' ) ){
+          
+          # collapse and recalculate them
+          precount <- nrow(news) + nrow(blogs) + nrow(tweets)
+          ngrams <- aggregate( frequency ~ observed, data=rbind( news, blogs, tweets ), FUN=sum)
+          message( sprintf( ' - cross-compiled %s %d-grams, narrowed from %d down to %d rows', category, n, precount, nrow(ngrams) ) )
 
-# splice some together as a reference for success
-penta_ref <- cbind(
-     head(penta_news,n=10),
-     head(penta_blogs,n=10),
-     head(penta_tweets,n=10)
-)
-colnames(penta_ref) <- c('n','nc','b','bc','t','tc')
-message('created reference frame')
+          # split the predicted off, and begin to categorize within
+          ngrams[, c( 'observed','predicted')] <- str_split_fixed(ngrams$observed, ' (?=[^ ]+$)', 2)
+          ngrams <- as.data.table( ngrams )
+          message( ' - split predicted word from predictive words' )
+                    
+          if ( category == 'no_stop_words' ) {
+               ngrams <- ngrams[ , observed := lapply( observed, function(observation) remove_stop_words(observation) )]
+               ngrams <- ngrams[ ngrams$observed != '', ]
+               ngrams$observed <- as.factor(unlist(ngrams$observed))
+               ngrams <- aggregate( frequency ~ observed + predicted, data=ngrams, FUN=sum)
+               message( sprintf( ' - re-aggregated %s %d-grams, narrowed from %d down to %d rows', category, n, precount, nrow(ngrams) ) )
+          }
 
-# collapse and recalculate them
-ngrams <- aggregate( frequency ~ observed, data=rbind( penta_news, penta_blogs, penta_tweets ), FUN=sum)
-rm( penta_tweets, penta_blogs, penta_news )
-message('aggregated into one frame')
-
-# split the predicted off, and begin to categorize within
-ngrams[,c('observed','predicted')] <- str_split_fixed(ngrams$observed, ' (?=[^ ]+$)', 2)
-message('split predicted from predictors')
-
-ngrams$observed <- as.factor(ngrams$observed)
-ngrams$predicted <- as.factor(ngrams$predicted)
-ngrams <- ngrams %>% 
-     group_by(observed) %>%
-     mutate(
-          incidence = round(
-               frequency / sum( frequency ),
-               digits=3
-          ),
-          population = n_distinct( frequency )
-     )
-message('created incidence and population columbs')
-
-ngrams <- as.data.table(ngrams)
-ngrams <- ngrams[order(-rank(ngrams$frequency), -rank(ngrams$incidence)),]
-#ngrams <- ngrams[, tail(.SD, 3), by=frequency]
-message('reordered and sliced off extraneous results')
+          # make processing words a little faster and ligher on memory
+          ngrams$observed <- as.factor(ngrams$observed)
+          ngrams$predicted <- as.factor(ngrams$predicted)
+          
+          message( 
+               sprintf( 
+                    ' - factored %d unique observed and %d unique predicted columns', 
+                    length(unique(ngrams$observed)), 
+                    length(unique(ngrams$predicted))
+               )
+          )
+          
+          # cull one more time based on a naive threshold
+          thresh <- 20
+          ngrams <- ngrams[ ngrams$frequency > thresh,]
+          message( 
+               sprintf( 
+                    ' - sliced down to %d total observations based on threshold of more than %d observations ', 
+                    nrow(ngrams), 
+                    thresh
+               )
+          )
+          
+          # now build out a predictor sensitive incidence score for each predicted word
+          ngrams <- as.data.table (
+               ngrams %>% 
+                    group_by(observed) %>%
+                    mutate(
+                         incidence = round(
+                              frequency / sum( frequency ),
+                              digits=4
+                         )
+                    )
+          )
+          message(' - incidence calculated for each predicted for each predictor ')
+          
+          # re-sort the table, and cleave all but three best options from it
+          ngrams <- ngrams[ order( -rank(ngrams$frequency), -rank(ngrams$incidence) ), ]
+          ngrams <- ngrams[ order( ngrams$frequency ), tail( .SD, 3 ), by=observed ]
+          message( 
+               sprintf( 
+                    ' - sliced again down to %d total observations, keeping only max of 3 observations per predictor ', 
+                    nrow(ngrams)
+               )
+          )
+          
+          # kep only incidence for numbers
+          ngrams <- ngrams[, !c('frequency'), with=F ]
+          saveRDS( ngrams, sprintf('dat/protomodel/chosen.%s.%d.grams.rds', category, n) )
+     }
+     
+     print( proc.time() - n_time )
+     message( sprintf( 'finished compiling %d-grams and saved to file under dat/protomodel\n\n', n ) )
+     
+}
