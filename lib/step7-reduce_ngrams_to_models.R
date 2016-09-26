@@ -31,13 +31,13 @@ for( n in 5:2 ) {
      tweets <- readRDS( sprintf( 'dat/ngrams/twitter/all.intact.%d.grams.rds', n ) )
      
      # cut out ridiculously rare things
-     news <- news[news$frequency > 2,]
-     blogs <- blogs[blogs$frequency > 2,]
-     tweets <- tweets[tweets$frequency > 2,]
-     message( sprintf( ' - merging all but unique %d-grams', n ) )
+     news <- news[news$frequency >= 2,]
+     blogs <- blogs[blogs$frequency >= 2,]
+     tweets <- tweets[tweets$frequency >= 2,]
+     message( sprintf( ' - merging all but completely unique %d-grams', n ) )
      
      # add ,'nostopword' later... along with a section to do it
-     for( category in c( 'intact', 'no_stop_words' ) ){
+     for( category in c( 'intact' ) ){ #, 'no_stop_words' ) ){ ... we'll do this if needed later
           
           # collapse and recalculate them
           precount <- nrow(news) + nrow(blogs) + nrow(tweets)
@@ -70,11 +70,11 @@ for( n in 5:2 ) {
           )
           
           # cull one more time based on a naive threshold
-          thresh <- 20
+          thresh <- 2 ^ (n-1)  # > 2, 4, 8, 16 
           ngrams <- ngrams[ ngrams$frequency > thresh,]
           message( 
                sprintf( 
-                    ' - sliced down to %d total observations based on threshold of more than %d observations ', 
+                    ' - sliced down to %d total observations based on threshold of more than %d observations', 
                     nrow(ngrams), 
                     thresh
                )
@@ -87,11 +87,14 @@ for( n in 5:2 ) {
                     mutate(
                          incidence = round(
                               frequency / sum( frequency ),
-                              digits=4
+                              digits=3
                          )
                     )
           )
           message(' - incidence calculated for each predicted for each predictor ')
+          
+          # and tack on rarity, for now, as well ... potentially useful later
+          # ngrams$rarity <- round( ngrams$frequency / sum( ngrams$frequency )*1000, digits=4 )
           
           # re-sort the table, and cleave all but three best options from it
           ngrams <- ngrams[ order( -rank(ngrams$frequency), -rank(ngrams$incidence) ), ]
@@ -103,7 +106,7 @@ for( n in 5:2 ) {
                )
           )
           
-          # kep only incidence for numbers
+          # keep only incidence for numbers
           ngrams <- ngrams[, !c('frequency'), with=F ]
           saveRDS( ngrams, sprintf('dat/protomodel/chosen.%s.%d.grams.rds', category, n) )
      }

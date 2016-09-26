@@ -15,10 +15,7 @@ for( type in c( 'blogs', 'news' ) ) {
      
      infile <- sprintf( '%s/%s', src, files[1] )
      unigrams <- readRDS( infile )
-     # we will store only stems, and do comparisons against stems later
-     # as to whether we'll keep the unstemmed token in our ngram lists
-     unigrams$observed <- wordstem( unigrams$observed, language="english" )
-     
+
      for( filename in files[2:( length(files) )] ) {
           
           file_time <- proc.time()
@@ -28,8 +25,6 @@ for( type in c( 'blogs', 'news' ) ) {
           
           # load the data
           next_unigrams <- readRDS( infile )
-          # see previous explanation for stemming
-          next_unigrams$observed <- wordstem( next_unigrams$observed, language="english" )
           total_loaded <- nrow(next_unigrams)
           message( sprintf( 'file < %s > loaded', infile ) )
           
@@ -53,8 +48,9 @@ for( type in c( 'blogs', 'news' ) ) {
           
      }
 
-     # now get a percentile count after killing rare stemmed unigrams (which should have many many less rare)
-     unigrams <- unigrams[ unigrams$frequency >= 50, ]
+     # now get a percentile count after killing rare stemmed unigrams (which should have made many less rare)
+     unigrams <- unigrams[ unigrams$frequency >= 10, ]
+     unigrams <- unigrams[ order( unigrams$frequency, decreasing=T ), ]
 
      # and, after all that work, just destroy ~85% of it!
      saveRDS( unigrams, dest )
