@@ -6,7 +6,7 @@ library(data.table)
 setwd("~/R/PROJECTS/Anticipation")
 
 entire <- proc.time()
-n <- 5
+nmax <- 6
 
 for( type in c('blogs','news','twitter') ) {
 
@@ -51,7 +51,7 @@ for( type in c('blogs','news','twitter') ) {
           corpus <- corpus[ !grepl( '[[:digit:]]', corpus ) ]
           message( sprintf( ' - content been tokenized and cleaned of number-letter combinations', infile ) )
           
-          for ( n in 5:1 ) {
+          for ( n in nmax:1 ) {
                
                # build out EVERY SINGLE ngram from the corpus
                ngrams <- unlist(

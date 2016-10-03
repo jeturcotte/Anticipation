@@ -6,6 +6,7 @@ library(data.table)
 setwd("~/R/PROJECTS/Anticipation")
 
 script_time <- proc.time()
+nmax <- 6
 
 # keep separate ngrams from different sources, for now
 for( type in c('blogs','news','twitter') ) {
@@ -19,7 +20,7 @@ for( type in c('blogs','news','twitter') ) {
                
           # keep separate the ngram lengths, for now
           # unigrams will be done separately as a close vocab system
-          for ( n in 5:2 ) {
+          for ( n in nmax:2 ) {
                
                n_time <- proc.time()
                

@@ -4,6 +4,7 @@ library(dplyr)
 library(data.table)
 
 setwd("~/R/PROJECTS/Anticipation")
+thresh <- c(10,2,4,8,16,32)
 
 # we are skipping twitter unigrams, for now, due to noise caused by intentional misspellings, et cetera
 for( type in c( 'blogs', 'news' ) ) {
@@ -49,7 +50,7 @@ for( type in c( 'blogs', 'news' ) ) {
      }
 
      # now get a percentile count after killing rare stemmed unigrams (which should have made many less rare)
-     unigrams <- unigrams[ unigrams$frequency >= 10, ]
+     unigrams <- unigrams[ unigrams$frequency >= thresh[1], ]
      unigrams <- unigrams[ order( unigrams$frequency, decreasing=T ), ]
 
      # and, after all that work, just destroy ~85% of it!

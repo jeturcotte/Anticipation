@@ -14,13 +14,16 @@ setwd("~/R/PROJECTS/Anticipation")
 # ngrams <- aggregate( frequency ~ observed, data=rbind( pbi, pni, pni ), FUN=sum)
 
 script_time <- proc.time()
+nmax <- 6
+maxper <- 2
+thresh <- c(10,2,4,8,16,32)
 
 remove_stop_words <- function(obs) {
      pared_down <- removeFeatures( tokenize(obs), stopwords("english") )
      return( paste( unlist( pared_down ), collapse=" " ) )
 }
 
-for( n in 5:2 ) {
+for( n in nmax:2 ) {
      
      n_time <- proc.time()
      message( sprintf( 'loading all source %d-gram files', n ) )
@@ -69,14 +72,13 @@ for( n in 5:2 ) {
                )
           )
           
-          # cull one more time based on a naive threshold
-          thresh <- 2 ^ (n-1)  # > 2, 4, 8, 16 
-          ngrams <- ngrams[ ngrams$frequency > thresh,]
+          # cull one more time based on a naive/observed threshold
+          ngrams <- ngrams[ ngrams$frequency > thresh[n],]
           message( 
                sprintf( 
                     ' - sliced down to %d total observations based on threshold of more than %d observations', 
                     nrow(ngrams), 
-                    thresh
+                    thresh[n]
                )
           )
           
@@ -87,7 +89,7 @@ for( n in 5:2 ) {
                     mutate(
                          incidence = round(
                               frequency / sum( frequency ),
-                              digits=3
+                              digits=4
                          )
                     )
           )
@@ -98,10 +100,10 @@ for( n in 5:2 ) {
           
           # re-sort the table, and cleave all but three best options from it
           ngrams <- ngrams[ order( -rank(ngrams$frequency), -rank(ngrams$incidence) ), ]
-          ngrams <- ngrams[ order( ngrams$frequency ), tail( .SD, 3 ), by=observed ]
+          ngrams <- ngrams[ order( ngrams$frequency ), tail( .SD, maxper ), by=observed ]
           message( 
                sprintf( 
-                    ' - sliced again down to %d total observations, keeping only max of 3 observations per predictor ', 
+                    ' - sliced again down to %d total observations, keeping only max of 2 observations per predictor ', 
                     nrow(ngrams)
                )
           )

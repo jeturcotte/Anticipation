@@ -56,5 +56,5 @@ message(
 
 print ( proc.time() - compile_time )
 
-saveRDS( ngrams[, !c( 'incidence', 'rarity' ), with=F ], 'dat/model.rds' )
+saveRDS( ngrams[, !c( 'incidence', 'rarity' ), with=F ], 'application/model.rds' )
 message( ' - final model saved to < dat/model.rds >\n\n' )
