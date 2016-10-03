@@ -2,8 +2,8 @@ name: TextAnticipation
 account: jeturcotte
 server: shinyapps.io
 appId: 128962
-bundleId: 574005
+bundleId: 574975
 url: https://jeturcotte.shinyapps.io/TextAnticipation/
-when: 1475375669.83751
+when: 1475497814.08701
 asMultiple: FALSE
 asStatic: FALSE

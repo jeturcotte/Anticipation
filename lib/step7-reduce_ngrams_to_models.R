@@ -16,7 +16,7 @@ setwd("~/R/PROJECTS/Anticipation")
 script_time <- proc.time()
 nmax <- 6
 maxper <- 2
-thresh <- c(10,2,4,8,16,32)
+thresh <- c(10,4,8,12,16,20)
 
 remove_stop_words <- function(obs) {
      pared_down <- removeFeatures( tokenize(obs), stopwords("english") )

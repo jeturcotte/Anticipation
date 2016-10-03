@@ -2,22 +2,29 @@ library(shiny)
 library(quanteda)
 library(data.table)
 
-model <- readRDS('model.rds')
-message('model loaded')
-
 findings <- function( text_so_far ) {
      
-     tokens <- unlist( tokenize( tolower( text_so_far ) ) )
+     tokens <- unlist(
+          tokenize(
+               tolower(text_so_far),
+               removeNumbers = T,
+               removePunct = T,
+               removeSeparators = T,
+               removeTwitter = T,
+               verbose = F
+          )
+     )
      results <- data.table()
      
      # look for all depths
-     tetra <- paste( tail(tokens,n=4), collapse=" " )
-     tri <- paste( tail(tokens,n=3), collapse=" " )
-     bi <- paste( tail(tokens,n=2), collapse=" " )
-     uni <- paste( tail(tokens,n=1), collapse=" " )
+     penta <- paste( tail(tokens,n=5), collapse=" " )  # intended to know some common catch phrases
+     tetra <- paste( tail(tokens,n=4), collapse=" " )  # intended to know some short catch phrases
+     tri <- paste( tail(tokens,n=3), collapse=" " )    # more likely to at least be able to follow grammar
+     bi <- paste( tail(tokens,n=2), collapse=" " )     # may be able to handle some grammar
+     uni <- paste( tail(tokens,n=1), collapse=" " )    # if all else fails
      
      # snag the whole resultset
-     model[ model$observed %in% c(tetra,tri,bi,uni), ]
+     model[ model$observed %in% c(penta,tetra,tri,bi,uni), ]
      
 }
 

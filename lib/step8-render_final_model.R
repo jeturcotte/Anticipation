@@ -11,10 +11,11 @@ bigrams <- readRDS('dat/protomodel/chosen.intact.2.grams.rds')
 trigrams <- readRDS('dat/protomodel/chosen.intact.3.grams.rds')
 tetragrams <- readRDS('dat/protomodel/chosen.intact.4.grams.rds')
 pentagrams <- readRDS('dat/protomodel/chosen.intact.5.grams.rds')
+hexagrams <- readRDS('dat/protomodel/chosen.intact.6.grams.rds')
 message('all n-grams loaded')
 
-ngrams <- rbind( bigrams, trigrams, tetragrams, pentagrams )
-rm( bigrams, trigrams, tetragrams, pentagrams )
+ngrams <- rbind( bigrams, trigrams, tetragrams, pentagrams, hexagrams )
+rm( bigrams, trigrams, tetragrams, pentagrams, hexagrams )
 message( sprintf( ' - %d ngrams combined into one structure', nrow(ngrams) ) )
 
 close_blogs <- readRDS('dat/close/blogs.rds')
