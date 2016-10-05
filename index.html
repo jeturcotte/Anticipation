@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Text Anticipation</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Text Anticipation">
+  <meta name="author" content="J.E. Turcotte">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Text Anticipation</h1>
+    <h2>A Modest Effort in Text Prediction</h2>
+    <p>J.E. Turcotte<br/></p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <hgroup>
+    <h2>A Simple Application</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>With this, I present a simple text prediction application
+
+<ul>
+<li>found at <a href="https://jeturcotte.shinyapps.io/TextAnticipation/">https://jeturcotte.shinyapps.io/TextAnticipation/</a></li>
+</ul></li>
+<li>The idea behind this application is to parse words up to the point where text has left off, and offer the most likely word to follow.</li>
+<li>Its use is simple enough; Begin by typing and, if you like, pause long enough for the application to guess.</li>
+<li>It will offer the most likely next word and even let you click on that word to append it to the sentence.
+
+<ul>
+<li>given that many applications offer more than one possibility, I also include what those might be</li>
+</ul></li>
+<li>The result can be quite hilarious, actually, if you start it off and just let the predictive model jabber away.</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>A Quick Look at the Guts</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>For this project, a modestly large corpus was provided -- Blogs, News Articles and a slew of Tweets.</li>
+<li>These were broken down into roughly 8.1 million individual sentences, which then were reinterpreted as chains of ngrams.</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Method to the Madness</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Interestingly enough, it looks as though D.C. more than recovered from the housing/banking crisis, while my native state <em>seems</em> to have fallen into a second pitfall, probably due to globalism.</p>
+
+<pre><code>## Error in file(file, &quot;rt&quot;): cannot open the connection
+</code></pre>
+
+<pre><code>## Error in melt(psf, id.vars = do_not_melt, variable.name = &quot;Date&quot;, value.name = &quot;MeanPrice&quot;): object &#39;psf&#39; not found
+</code></pre>
+
+<pre><code>## Error in paste(psf$Date, &quot;01&quot;): object &#39;psf&#39; not found
+</code></pre>
+
+<pre><code>## Error in colnames(psf)[2] &lt;- &quot;State&quot;: object &#39;psf&#39; not found
+</code></pre>
+
+<pre><code>## Error in eval(expr, envir, enclos): object &#39;psf&#39; not found
+</code></pre>
+
+<pre><code>## Error in subset(psf, State %in% c(&quot;District of Columbia&quot;, &quot;Virginia&quot;, : object &#39;psf&#39; not found
+</code></pre>
+
+<pre><code>## Error in ggplot(my_states, aes(Date, MeanPrice)): object &#39;my_states&#39; not found
+</code></pre>
+
+<pre><code>## Error in eval(expr, envir, enclos): object &#39;psf_plot&#39; not found
+</code></pre>
+
+<pre><code>## Error in eval(expr, envir, enclos): object &#39;psf_plot&#39; not found
+</code></pre>
+
+<pre><code>## Error in eval(expr, envir, enclos): object &#39;psf_plot&#39; not found
+</code></pre>
+
+<p>Sadly, even as the jobs are being pulled into the cities, this one, at least, appears to be accelerating away from affordability.  The ratio in difference between the four in 2000 is significantly less acute than in 2015.</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>A Quick Look across the Lower 48</h2>
+  </hgroup>
+  <article data-timings="">
+    <p><img src="assets/img/screenshot.png" alt="A Screenshot of Per-Square-Foot"></p>
+
+<p>Thus, I introduce the first rudimentary version of the <a href="https://jeturcotte.shinyapps.io/per-square-foot/">Per Square Foot</a> application which, for now, shows the mean square foot price for housing across most of the lower 48 states, both in the dollars of the time, and adjusted to the value of the 2016 dollar.</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-5" style="background:;">
+  <hgroup>
+    <h2>Future Upgrades</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Would be nice to add similar breakdown by county, by zipcode, metro area, et cetera.</li>
+<li>Would be nice to offer a trend plot for the entire nation as a time series, and extrapolate into the future with predictions</li>
+<li>Would be nice to offer a trend plot, per state or other regionality, perhaps even in each popup, of the same information</li>
+<li>Would be nice to map out the mean price per square foot as a function of local cost of living and wages (affordability.)</li>
+<li>Would be nice to make similar chart based on rent instead of purchase cost.</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='A Simple Application'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='A Quick Look at the Guts'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Method to the Madness'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='A Quick Look across the Lower 48'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Future Upgrades'>
+         5
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>
