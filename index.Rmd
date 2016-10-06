@@ -21,35 +21,24 @@ knit        : slidify::knit2slides
   * given that many applications offer more than one possibility, I also include what those might be
 * The result can be quite hilarious, actually, if you start it off and just let the predictive model jabber away
 
----
+--- 
 
 ## Cleaning up the Original Corpus
 
-* For this project, a modestly large corpus was provided -- Blogs, News Articles and a slew of Tweets
+* For this project, a modestly large corpus was provided -- Blogs, News Articles and a large slew of Tweets
 * These were broken down into roughly 8.1 million individual sentences
 * These had several passes of repair made... 
   * Numbers and Punctuation and Twitter handles were removed
   * Along with frequent abuses of excess whitespace
-  * Anything inside parentheses or brackets were removed
-  * As were run-on button smashes, like 'aaaaaaaaaaaaahhhh', reduced simply to 'ah'
-  * Various common titles, like capt., mr., et cetera were normalized
-  
----
+  * Anything inside parentheses or brackets were removed, as being potentially interruptive to otherwise cohesive phraseology
+  * So also were run-on button smashes, like 'aaaaaaaaaaaaahhhh', reduced simply to 'ah'
+  * Various common titles, like capt., mr., mrs., et cetera were normalized
 
-## 
-  
-  which then were reinterpreted as chains of ngrams.
-```{r get some counts, message=F, eval=T, echo=F, warning=F }
-
-
-
-```
-
----
+--- 
 
 ## Method to the Madness
 
-Interestingly enough, it looks as though D.C. more than recovered from the housing/banking crisis, while my native state *seems* to have fallen into a second pitfall, probably due to globalism.
+
 
 ```{r simple plot, fig.height=3.5, fig.width=11, fig.align='center', message=F, eval=T, echo=F, warning=F }
 require(ggplot2)

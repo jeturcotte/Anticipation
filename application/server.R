@@ -30,6 +30,7 @@ findings <- function( text_so_far ) {
 
 choices <- function( results ) {
      
+     if(!nrow(results)){ return(c('NA','NA','NA'))}
      results <- aggregate( score ~ predicted, data=results, FUN=max)
      head(
           results[ order( results$score, decreasing=T ), ]$predicted,

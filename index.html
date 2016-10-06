@@ -51,14 +51,14 @@
 <ul>
 <li>found at <a href="https://jeturcotte.shinyapps.io/TextAnticipation/">https://jeturcotte.shinyapps.io/TextAnticipation/</a></li>
 </ul></li>
-<li>The idea behind this application is to parse words up to the point where text has left off, and offer the most likely word to follow.</li>
-<li>Its use is simple enough; Begin by typing and, if you like, pause long enough for the application to guess.</li>
-<li>It will offer the most likely next word and even let you click on that word to append it to the sentence.
+<li>The idea behind this application is to parse words up to the point where text has left off, and offer the most likely word to follow</li>
+<li>Its use is simple enough; Begin by typing and, if you like, pause long enough for the application to guess</li>
+<li>It will offer the most likely next word and even let you click on that word to append it to the sentence
 
 <ul>
 <li>given that many applications offer more than one possibility, I also include what those might be</li>
 </ul></li>
-<li>The result can be quite hilarious, actually, if you start it off and just let the predictive model jabber away.</li>
+<li>The result can be quite hilarious, actually, if you start it off and just let the predictive model jabber away</li>
 </ul>
 
   </article>
@@ -67,12 +67,21 @@
 
 <slide class="" id="slide-2" style="background:;">
   <hgroup>
-    <h2>A Quick Look at the Guts</h2>
+    <h2>Cleaning up the Original Corpus</h2>
   </hgroup>
   <article data-timings="">
     <ul>
-<li>For this project, a modestly large corpus was provided -- Blogs, News Articles and a slew of Tweets.</li>
-<li>These were broken down into roughly 8.1 million individual sentences, which then were reinterpreted as chains of ngrams.</li>
+<li>For this project, a modestly large corpus was provided -- Blogs, News Articles and a slew of Tweets</li>
+<li>These were broken down into roughly 8.1 million individual sentences</li>
+<li>These had several passes of repair made... 
+
+<ul>
+<li>Numbers and Punctuation and Twitter handles were removed</li>
+<li>Along with frequent abuses of excess whitespace</li>
+<li>Anything inside parentheses or brackets were removed, as being potentially interruptive to otherwise cohesive phraseology</li>
+<li>So also were run-on button smashes, like &#39;aaaaaaaaaaaaahhhh&#39;, reduced simply to &#39;ah&#39;</li>
+<li>Various common titles, like capt., mr., mrs., et cetera were normalized</li>
+</ul></li>
 </ul>
 
   </article>
@@ -164,7 +173,7 @@
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=2 title='A Quick Look at the Guts'>
+        data-slide=2 title='Cleaning up the Original Corpus'>
          2
       </a>
     </li>
