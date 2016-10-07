@@ -18,10 +18,7 @@ prepare <- function( corpus ) {
      )
 }
 
-findings <- function( text_so_far ) {
-     
-     tokens <- prepare( unlist(text_so_far) )
-     results <- data.table()
+findings <- function( tokens ) {
      
      # look for all depths
      penta <- paste( tail(tokens,n=5), collapse=" " )  # intended to know some common catch phrases
@@ -48,71 +45,77 @@ choices <- function( results ) {
 
 # load the data
 model <- readRDS('application/model.rds')
-test_blogs <- prepare( readRDS('dat/corpus/blogs/testing.rds') )
-test_news <- prepare( readRDS('dat/corpus/news/testing.rds') )
-test_tweets <- prepare( readRDS('dat/corpus/twitter/testing.rds') )
 
 set.seed(7041)
+# source, ngram, hit, which
+line <- '%s,%s,%s,%s,%s,%d'
+outfile <- 'reports/test_results.csv'
+write( 'source,ngram,correct,best,which,hits', outfile )
 
-tbt <- 0
-tbc_a <- 0
-tbc_b <- 0
-tbc_c <- 0
-for( thought in test_blogs ){
-     if( length(thought) <= 3 ){ next }
-     tbt <- tbt + 1
-     end_at <- sample( 1:(length(thought)-1), 1 )
-     results <- choices( findings( unlist( thought[1:end_at] ) ) )
+for( src in c('blogs','news','twitter') ) {
+
+     infile <- sprintf( 'dat/corpus/%s/testing.rds', src )
+     corpus <- prepare(
+          readRDS( infile )
+     )
+     message( sprintf( '- file < %s > loaded;', infile ) )
      
-     if ( thought[(end_at+1)] == results[1] ) {
-          tbc_a <- tbc_a + 1
+     src_time <- proc.time()
+     thoughts_tested <- 0
+     for( thought in corpus ) {
+          
+          if( length(thought) <= 4 ){ next }
+          thoughts_tested <- thoughts_tested + 1
+          
+          # assemble our randomly placed ngram
+          guess_at <- sample( 3:(length(thought)-1), 1 )
+          ngram <- unlist( thought[1:guess_at] )
+          
+          # predict what comes next
+          predictions <- choices( findings( ngram ) )
+
+          # tag which hit we got, if any
+          which_hit <- 'none'
+          total_hits <- length(predictions)
+          if ( thought[(guess_at+1)] == predictions[1] ) {
+               which_hit <- 'first'
+          }
+          else if ( !is.na(predictions[2]) && thought[(guess_at+1)] == predictions[2] ) {
+               which_hit <- 'second'
+          }
+          else if ( !is.na(predictions[3]) && thought[(guess_at+1)] == predictions[3] ) {
+               which_hit <- 'third'
+          }
+          
+          # append to file
+          entry <- sprintf(
+               line,
+               src,
+               paste( tail(ngram,n=5), collapse=" " ),
+               thought[(guess_at+1)],
+               predictions[1],
+               which_hit,
+               total_hits
+          )
+          write( entry, outfile, append=T )
+          
+          # keep us updated on progress
+          if ( !1000 %% thoughts_tested ) {
+               message(
+                    sprintf(
+                         ' - %dk %s thoughts tested; %0.2f complete',
+                         as.integer( thoughts_tested / 1000 ),
+                         src,
+                         ( thoughts_tested / nrow(corpus) * 100 )
+                    )
+               )
+          }
+          
      }
-     else if ( !is.na(results[2]) && thought[(end_at+1)] == results[2] ) {
-          tbc_b <- tbc_b + 1
-     }
-     else if ( !is.na(results[3]) && thought[(end_at+1)] == results[3] ) {
-          tbc_c <- tbc_c + 1
-     }
+     
+     print( proc.time() - src_time )
+     message( sprintf( '\t- %s material processed;\n', src ) )
+     
 }
 
-tnt <- 0
-tnc_a <- 0
-tnc_b <- 0
-tnc_c <- 0
-for( thought in test_news ){
-     if( length(thought) <= 3 ){ next }
-     tnt <- tnt + 1
-     end_at <- sample( 1:(length(thought)-1), 1 )
-     results <- choices( findings( unlist( thought[1:end_at] ) ) )
-     
-     if ( thought[(end_at+1)] == results[1] ) {
-          tnc_a <- tnc_a + 1
-     }
-     else if ( !is.na(results[2]) && thought[(end_at+1)] == results[2] ) {
-          tnc_b <- tnc_b + 1
-     }
-     else if ( !is.na(results[3]) && thought[(end_at+1)] == results[3] ) {
-          tnc_c <- tnc_c + 1
-     }
-}
-
-ttt <- 0
-ttc_a <- 0
-ttc_b <- 0
-ttc_c <- 0
-for( thought in test_tweets ){
-     if( length(thought) <= 3 ){ next }
-     ttt <- ttt + 1
-     end_at <- sample( 1:(length(thought)-1), 1 )
-     results <- choices( findings( unlist( thought[1:end_at] ) ) )
-     
-     if ( thought[(end_at+1)] == results[1] ) {
-          ttc_a <- ttc_a + 1
-     }
-     else if ( !is.na(results[2]) && thought[(end_at+1)] == results[2] ) {
-          ttc_b <- ttc_b + 1
-     }
-     else if ( !is.na(results[3]) && thought[(end_at+1)] == results[3] ) {
-          ttc_c <- ttc_c + 1
-     }
-}
+message( '- testing process complete ')

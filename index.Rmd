@@ -42,7 +42,10 @@ knit        : slidify::knit2slides
 
 ```{r simple plot, fig.height=3.5, fig.width=11, fig.align='center', message=F, eval=T, echo=F, warning=F }
 require(ggplot2)
-require(reshape2)
+results <- readRDS("dat/test_results.rds")
+resplot <- ggplot( results, aes(testbed, tally) )
+respolt <- resplot + geom_bar
+
 psf <- read.csv("data/psf_by_state.csv")
 keep_these <- c('State','Date','MeanPrice')
 do_not_melt <- c('RegionID','RegionName','SizeRank')
